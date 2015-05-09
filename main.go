@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/yosssi/ace"
 )
 
 type Config struct {
 	Address string
+
+	AceOptions ace.Options
 }
 
 var config Config
@@ -31,5 +34,15 @@ func main() {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello, World!\n")
+	tpl, err := ace.Load("base", "hello", &config.AceOptions)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.Execute(w, map[string]string{"Title": "Go Web Sample"})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
