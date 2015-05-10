@@ -1,5 +1,6 @@
 {
 	"address": ":8080",
+	"staticDir": "public",
 
 	"aceOptions": {
 		"BaseDir": "template",
