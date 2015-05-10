@@ -10,8 +10,12 @@ import (
 )
 
 type Config struct {
-	Address string
+	Address   string
 	StaticDir string
+
+	CookieName   string
+	CookieMaxAge int
+	CookieSecure bool
 
 	AceOptions ace.Options
 }
@@ -32,7 +36,11 @@ func main() {
 		staticDir(config.StaticDir, http.DefaultServeMux)
 	}
 
+	http.HandleFunc("/login", login)
+	http.HandleFunc("/logout", logout)
+
 	http.HandleFunc("/", hello)
+
 	err = http.ListenAndServe(config.Address, nil)
 	if err != nil {
 		panic(err)
@@ -48,19 +56,38 @@ func staticDir(dirname string, mux *http.ServeMux) {
 	fileServer := http.FileServer(http.Dir(dirname))
 	for _, fi := range fis {
 		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
-			mux.Handle("/" + fi.Name() + "/", fileServer)
+			mux.Handle("/"+fi.Name()+"/", fileServer)
 		}
 	}
 }
 
+func login(w http.ResponseWriter, r *http.Request) {
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     config.CookieName,
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   config.CookieSecure,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+	http.Redirect(w, r, "/", 302)
+}
+
 func hello(w http.ResponseWriter, r *http.Request) {
-	tpl, err := ace.Load("base", "hello", &config.AceOptions)
+	template(w, "hello", map[string]string{"Title": "Go Web Sample"})
+}
+
+func template(w http.ResponseWriter, name string, data interface{}) {
+	tpl, err := ace.Load("base", name, &config.AceOptions)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = tpl.Execute(w, map[string]string{"Title": "Go Web Sample"})
+	err = tpl.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

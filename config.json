@@ -2,6 +2,10 @@
 	"address": ":8080",
 	"staticDir": "public",
 
+	"cookieName": "session_id",
+	"cookieMaxAge": 0,
+	"cookieSecure": false,
+
 	"aceOptions": {
 		"BaseDir": "template",
 		"DynamicReload": true
