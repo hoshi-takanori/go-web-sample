@@ -13,9 +13,7 @@ type Config struct {
 	Address   string
 	StaticDir string
 
-	CookieName   string
-	CookieMaxAge int
-	CookieSecure bool
+	SessionCookie http.Cookie
 
 	AceOptions ace.Options
 }
@@ -62,22 +60,42 @@ func staticDir(dirname string, mux *http.ServeMux) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		if username == password {
+			setCookie(w, username)
+			http.Redirect(w, r, "/", 302)
+			return
+		}
+	}
+
+	template(w, "login", map[string]string{"Title": "Go Web Sample"})
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	cookie := http.Cookie{
-		Name:     config.CookieName,
-		Path:     "/",
-		MaxAge:   -1,
-		Secure:   config.CookieSecure,
-		HttpOnly: true,
-	}
-	http.SetCookie(w, &cookie)
+	setCookie(w, "")
 	http.Redirect(w, r, "/", 302)
 }
 
+func setCookie(w http.ResponseWriter, value string) {
+	cookie := config.SessionCookie
+	cookie.Value = value
+	if value == "" {
+		cookie.MaxAge = -1
+	}
+	http.SetCookie(w, &cookie)
+}
+
 func hello(w http.ResponseWriter, r *http.Request) {
-	template(w, "hello", map[string]string{"Title": "Go Web Sample"})
+	data := map[string]string{
+		"Title": "Go Web Sample",
+	}
+	cookie, err := r.Cookie(config.SessionCookie.Name)
+	if err == nil {
+		data["Username"] = cookie.Value
+	}
+	template(w, "hello", data)
 }
 
 func template(w http.ResponseWriter, name string, data interface{}) {

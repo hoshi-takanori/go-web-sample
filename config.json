@@ -2,9 +2,13 @@
 	"address": ":8080",
 	"staticDir": "public",
 
-	"cookieName": "session_id",
-	"cookieMaxAge": 0,
-	"cookieSecure": false,
+	"sessionCookie": {
+		"name": "session_id",
+		"path": "/",
+		"maxAge": 0,
+		"secure": false,
+		"httpOnly": true
+	},
 
 	"aceOptions": {
 		"BaseDir": "template",

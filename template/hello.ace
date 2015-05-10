@@ -1,2 +1,10 @@
 = content main
-  p Hello, World!
+  {{if .Username}}
+    p Hello, {{.Username}}!
+    form method=post action=/logout
+      input type=submit value=logout
+  {{else}}
+    p Hello, World!
+    p
+      a href=/login Login
+  {{end}}
