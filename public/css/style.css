@@ -1,0 +1,15 @@
+body {
+  padding: 1em;
+}
+
+h1 {
+  margin: 0 0 0.4em;
+}
+
+p.error {
+  background: lightpink;
+}
+
+label {
+  font-size: small;
+}

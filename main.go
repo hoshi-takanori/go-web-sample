@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/yosssi/ace"
 )
@@ -12,6 +13,8 @@ import (
 type Config struct {
 	Address   string
 	StaticDir string
+
+	Title string
 
 	SessionCookie http.Cookie
 
@@ -60,42 +63,56 @@ func staticDir(dirname string, mux *http.ServeMux) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	data := newData(config.Title)
+
 	if r.Method == "POST" {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
+		keepLogin := r.FormValue("keep-login")
 		if username == password {
-			setCookie(w, username)
+			setCookie(w, username, keepLogin)
 			http.Redirect(w, r, "/", 302)
 			return
 		}
+
+		data["Error"] = "Unknown username or password."
 	}
 
-	template(w, "login", map[string]string{"Title": "Go Web Sample"})
+	template(w, "login", data)
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	setCookie(w, "")
+	setCookie(w, "", "")
 	http.Redirect(w, r, "/", 302)
 }
 
-func setCookie(w http.ResponseWriter, value string) {
+func setCookie(w http.ResponseWriter, value string, keepLogin string) {
 	cookie := config.SessionCookie
 	cookie.Value = value
 	if value == "" {
 		cookie.MaxAge = -1
+	} else if keepLogin == "" {
+		cookie.MaxAge = 0
+	} else if cookie.MaxAge > 0 {
+		d := time.Duration(cookie.MaxAge) * time.Second
+		cookie.Expires = time.Now().Add(d)
 	}
 	http.SetCookie(w, &cookie)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	data := map[string]string{
-		"Title": "Go Web Sample",
-	}
+	data := newData(config.Title)
 	cookie, err := r.Cookie(config.SessionCookie.Name)
 	if err == nil {
 		data["Username"] = cookie.Value
 	}
 	template(w, "hello", data)
+}
+
+func newData(title string) map[string]interface{} {
+	return map[string]interface{}{
+		"Title": title,
+	}
 }
 
 func template(w http.ResponseWriter, name string, data interface{}) {

@@ -2,10 +2,12 @@
 	"address": ":8080",
 	"staticDir": "public",
 
+	"title": "Go Web Sample",
+
 	"sessionCookie": {
 		"name": "session_id",
 		"path": "/",
-		"maxAge": 0,
+		"maxAge": 2592000,
 		"secure": false,
 		"httpOnly": true
 	},
