@@ -4,6 +4,9 @@
 
 	"title": "Go Web Sample",
 
+	"databaseDriver": "postgres",
+	"databaseSource": "postgres://nobody@localhost/web-users",
+
 	"sessionCookie": {
 		"name": "session_id",
 		"path": "/",

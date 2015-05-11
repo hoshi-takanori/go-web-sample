@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/yosssi/ace"
 )
 
@@ -16,12 +18,16 @@ type Config struct {
 
 	Title string
 
+	DatabaseDriver string
+	DatabaseSource string
+
 	SessionCookie http.Cookie
 
 	AceOptions ace.Options
 }
 
 var config Config
+var db *sql.DB
 
 func main() {
 	str, err := ioutil.ReadFile("config.json")
@@ -29,6 +35,11 @@ func main() {
 		panic(err)
 	}
 	err = json.Unmarshal(str, &config)
+	if err != nil {
+		panic(err)
+	}
+
+	db, err = sql.Open(config.DatabaseDriver, config.DatabaseSource)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +80,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		keepLogin := r.FormValue("keep-login")
-		if username == password {
+		if checkPassword(username, password) {
 			setCookie(w, username, keepLogin)
 			http.Redirect(w, r, "/", 302)
 			return
@@ -84,6 +95,28 @@ func login(w http.ResponseWriter, r *http.Request) {
 func logout(w http.ResponseWriter, r *http.Request) {
 	setCookie(w, "", "")
 	http.Redirect(w, r, "/", 302)
+}
+
+func checkPassword(username, password string) bool {
+	if username == "" || password == "" {
+		return false
+	}
+
+	rows, err := db.Query("select password from users where name = $1", username)
+	if err != nil {
+		return false
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var passwd string
+		err = rows.Scan(&passwd)
+		if err == nil && passwd == password {
+			return true
+		}
+	}
+
+	return false
 }
 
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {
