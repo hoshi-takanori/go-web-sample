@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/yosssi/ace"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Config struct {
@@ -102,21 +103,14 @@ func checkPassword(username, password string) bool {
 		return false
 	}
 
-	rows, err := db.Query("select password from users where name = $1", username)
+	var hash string
+	err := db.QueryRow("select password from users where name = $1", username).Scan(&hash)
 	if err != nil {
 		return false
 	}
-	defer rows.Close()
 
-	if rows.Next() {
-		var passwd string
-		err = rows.Scan(&passwd)
-		if err == nil && passwd == password {
-			return true
-		}
-	}
-
-	return false
+	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {

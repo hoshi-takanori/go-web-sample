@@ -47,17 +47,17 @@ func main() {
 
 func setPassword(username string) {
 	fmt.Print("Password: ")
-	password := string(gopass.GetPasswdMasked())
+	password := gopass.GetPasswdMasked()
 
 	fmt.Print("Retype Password: ")
-	retype := string(gopass.GetPasswdMasked())
+	retype := gopass.GetPasswdMasked()
 
-	if password != retype {
+	if string(password) != string(retype) {
 		fmt.Println("Passwords not match")
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 0)
+	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +69,7 @@ func setPassword(username string) {
 	}
 
 	if err == sql.ErrNoRows {
-		_, err = db.Exec("insert into users values ($1, $2)", username, string(hash))
+		_, err = db.Exec("insert into users (name, password) values ($1, $2)", username, string(hash))
 	} else {
 		_, err = db.Exec("update users set password = $1 where name = $2", string(hash), username)
 	}
@@ -89,9 +89,9 @@ func checkPassword(username string) {
 	}
 
 	fmt.Print("Password: ")
-	password := string(gopass.GetPasswdMasked())
+	password := gopass.GetPasswdMasked()
 
-	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(hash), password)
 	if err == nil {
 		println("OK")
 	} else {
