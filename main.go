@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -82,7 +84,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		keepLogin := r.FormValue("keep-login")
 		if checkPassword(username, password) {
-			setCookie(w, username, keepLogin)
+			startSession(w, username, keepLogin)
 			http.Redirect(w, r, "/", 302)
 			return
 		}
@@ -113,6 +115,21 @@ func checkPassword(username, password string) bool {
 	return err == nil
 }
 
+func startSession(w http.ResponseWriter, username string, keepLogin string) {
+	rb := make([]byte, 32)
+	_, err := rand.Read(rb)
+	if err != nil {
+		panic(err)
+	}
+	rs := strings.TrimRight(base64.URLEncoding.EncodeToString(rb), "=")
+	println("rs =", rs)
+	_, err = db.Exec("insert into session values ($1, $2)", rs, username)
+	if err != nil {
+		panic(err)
+	}
+	setCookie(w, rs, keepLogin);
+}
+
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {
 	cookie := config.SessionCookie
 	cookie.Value = value
@@ -131,7 +148,11 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	data := newData(config.Title)
 	cookie, err := r.Cookie(config.SessionCookie.Name)
 	if err == nil {
-		data["Username"] = cookie.Value
+		var username string
+		err := db.QueryRow("select user_name from session where id = $1", cookie.Value).Scan(&username)
+		if err == nil {
+			data["Username"] = username
+		}
 	}
 	template(w, "hello", data)
 }
