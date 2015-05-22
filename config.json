@@ -1,6 +1,7 @@
 {
 	"address": ":8080",
-	"staticDir": "public",
+	"publicDir": "public",
+	"privateDir": "private",
 
 	"title": "Go Web Sample",
 

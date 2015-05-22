@@ -18,8 +18,9 @@ import (
 )
 
 type Config struct {
-	Address   string
-	StaticDir string
+	Address    string
+	PublicDir  string
+	PrivateDir string
 
 	Title string
 
@@ -49,8 +50,8 @@ func main() {
 		panic(err)
 	}
 
-	if config.StaticDir != "" {
-		staticDir(config.StaticDir, http.DefaultServeMux)
+	if config.PublicDir != "" {
+		staticDir(config.PublicDir, http.DefaultServeMux)
 	}
 
 	http.HandleFunc("/login", login)
@@ -58,6 +59,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	http.HandleFunc("/", sessionHandler(mux))
+
+	if config.PrivateDir != "" {
+		staticDir(config.PrivateDir, mux)
+	}
 
 	mux.HandleFunc("/", hello)
 
@@ -70,7 +75,8 @@ func main() {
 func staticDir(dirname string, mux *http.ServeMux) {
 	fis, err := ioutil.ReadDir(dirname)
 	if err != nil {
-		panic(err)
+		println(err.Error())
+		return
 	}
 
 	fileServer := http.FileServer(http.Dir(dirname))
