@@ -56,7 +56,10 @@ func main() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)
 
-	http.HandleFunc("/", hello)
+	mux := http.NewServeMux()
+	http.HandleFunc("/", sessionHandler(mux))
+
+	mux.HandleFunc("/", hello)
 
 	err = http.ListenAndServe(config.Address, nil)
 	if err != nil {
@@ -125,20 +128,6 @@ func checkPassword(username, password string) bool {
 	return err == nil
 }
 
-func startSession(username string) (string, error) {
-	buf := make([]byte, 32)
-	_, err := rand.Read(buf)
-	if err != nil {
-		return "", err
-	}
-	sid := strings.TrimRight(base64.URLEncoding.EncodeToString(buf), "=")
-	_, err = db.Exec("insert into session values ($1, $2)", sid, username)
-	if err != nil {
-		return "", err
-	}
-	return sid, nil
-}
-
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {
 	cookie := config.SessionCookie
 	cookie.Value = value
@@ -153,15 +142,49 @@ func setCookie(w http.ResponseWriter, value string, keepLogin string) {
 	http.SetCookie(w, &cookie)
 }
 
+func startSession(username string) (string, error) {
+	buf := make([]byte, 32)
+	_, err := rand.Read(buf)
+	if err != nil {
+		return "", err
+	}
+	sid := strings.TrimRight(base64.URLEncoding.EncodeToString(buf), "=")
+	_, err = db.Exec("insert into session values ($1, $2)", sid, username)
+	if err != nil {
+		return "", err
+	}
+	return sid, nil
+}
+
+func getSession(r *http.Request) (string, error) {
+	cookie, err := r.Cookie(config.SessionCookie.Name)
+	if err != nil {
+		return "", err
+	}
+	var username string
+	err = db.QueryRow("select user_name from session where id = $1", cookie.Value).Scan(&username)
+	if err != nil {
+		return "", err
+	}
+	return username, nil
+}
+
+func sessionHandler(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, err := getSession(r)
+		if err != nil {
+			http.Redirect(w, r, "/login", 302)
+		} else {
+			handler.ServeHTTP(w, r)
+		}
+	}
+}
+
 func hello(w http.ResponseWriter, r *http.Request) {
 	data := newData(config.Title)
-	cookie, err := r.Cookie(config.SessionCookie.Name)
+	username, err := getSession(r)
 	if err == nil {
-		var username string
-		err := db.QueryRow("select user_name from session where id = $1", cookie.Value).Scan(&username)
-		if err == nil {
-			data["Username"] = username
-		}
+		data["Username"] = username
 	}
 	template(w, "hello", data)
 }
