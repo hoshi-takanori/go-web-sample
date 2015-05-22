@@ -10,6 +10,6 @@ p.error {
   background: lightpink;
 }
 
-label {
+label.keep-login {
   font-size: small;
 }

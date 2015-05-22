@@ -10,6 +10,6 @@
     input type=password name=password placeholder=Password
     br
     input type=checkbox name=keep-login value=1 checked= id=keep-login
-    label for=keep-login Keep me logged in for 30 days
+    label.keep-login for=keep-login Keep me logged in for 30 days
     br
     input type=submit value=Login

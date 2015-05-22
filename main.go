@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -70,6 +72,12 @@ func staticDir(dirname string, mux *http.ServeMux) {
 
 	fileServer := http.FileServer(http.Dir(dirname))
 	for _, fi := range fis {
+		if fi.Mode()&os.ModeSymlink != 0 {
+			fi2, err := os.Stat(path.Join(dirname, fi.Name()))
+			if err == nil {
+				fi = fi2
+			}
+		}
 		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
 			mux.Handle("/"+fi.Name()+"/", fileServer)
 		}
@@ -84,12 +92,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		keepLogin := r.FormValue("keep-login")
 		if checkPassword(username, password) {
-			startSession(w, username, keepLogin)
-			http.Redirect(w, r, "/", 302)
-			return
+			sessionId, err := startSession(username)
+			if err == nil {
+				setCookie(w, sessionId, keepLogin)
+				http.Redirect(w, r, "/", 302)
+			}
 		}
 
-		data["Error"] = "Unknown username or password."
+		data["Error"] = "Login failed."
 	}
 
 	template(w, "login", data)
@@ -115,19 +125,18 @@ func checkPassword(username, password string) bool {
 	return err == nil
 }
 
-func startSession(w http.ResponseWriter, username string, keepLogin string) {
-	rb := make([]byte, 32)
-	_, err := rand.Read(rb)
+func startSession(username string) (string, error) {
+	buf := make([]byte, 32)
+	_, err := rand.Read(buf)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	rs := strings.TrimRight(base64.URLEncoding.EncodeToString(rb), "=")
-	println("rs =", rs)
-	_, err = db.Exec("insert into session values ($1, $2)", rs, username)
+	sid := strings.TrimRight(base64.URLEncoding.EncodeToString(buf), "=")
+	_, err = db.Exec("insert into session values ($1, $2)", sid, username)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	setCookie(w, rs, keepLogin);
+	return sid, nil
 }
 
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {
