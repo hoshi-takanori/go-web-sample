@@ -58,11 +58,13 @@ func main() {
 	http.HandleFunc("/logout", logout)
 
 	mux := http.NewServeMux()
-	http.HandleFunc("/", sessionHandler(mux))
+	http.HandleFunc("/", authHandler(mux))
 
 	if config.PrivateDir != "" {
 		staticDir(config.PrivateDir, mux)
 	}
+
+	mux.HandleFunc("/password", password)
 
 	mux.HandleFunc("/", hello)
 
@@ -115,8 +117,38 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
+	clearSession(r)
 	setCookie(w, "", "")
 	http.Redirect(w, r, "/", 302)
+}
+
+func password(w http.ResponseWriter, r *http.Request) {
+	name := "password"
+	data := newData("Change Password")
+
+	if r.Method == "POST" {
+		username, err := getSession(r)
+		current := r.FormValue("current")
+		if err == nil && checkPassword(username, current) {
+			new1 := r.FormValue("new1")
+			new2 := r.FormValue("new2")
+			if new1 == new2 && len(new1) >= 6 && new1 != username {
+				err := changePassword(username, new1)
+				if err == nil {
+					name = "login"
+					data["Good"] = "Your password has been changed successfully. Please login again."
+				} else {
+					data["Error"] = "Failed to change your password."
+				}
+			} else {
+				data["Error"] = "Bad new password."
+			}
+		} else {
+			data["Error"] = "Bad current password."
+		}
+	}
+
+	template(w, name, data)
 }
 
 func checkPassword(username, password string) bool {
@@ -132,6 +164,22 @@ func checkPassword(username, password string) bool {
 
 	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func changePassword(username, password string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("update users set password = $1 where name = $2", string(hash), username)
+	if err != nil {
+		return err
+	}
+
+	db.Exec("delete from session where user_name = $1", username)
+
+	return nil
 }
 
 func setCookie(w http.ResponseWriter, value string, keepLogin string) {
@@ -162,6 +210,14 @@ func startSession(username string) (string, error) {
 	return sid, nil
 }
 
+func clearSession(r *http.Request) {
+	cookie, err := r.Cookie(config.SessionCookie.Name)
+	if err != nil {
+		return
+	}
+	db.Exec("delete from session where id = $1", cookie.Value)
+}
+
 func getSession(r *http.Request) (string, error) {
 	cookie, err := r.Cookie(config.SessionCookie.Name)
 	if err != nil {
@@ -175,7 +231,7 @@ func getSession(r *http.Request) (string, error) {
 	return username, nil
 }
 
-func sessionHandler(handler http.Handler) http.HandlerFunc {
+func authHandler(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, err := getSession(r)
 		if err != nil {

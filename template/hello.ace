@@ -1,6 +1,8 @@
 = content main
   {{if .Username}}
     p Hello, {{.Username}}!
+    p
+      a href=/password Change Password
     form method=post action=/logout
       input type=submit value=logout
   {{else}}

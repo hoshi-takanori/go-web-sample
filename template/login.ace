@@ -1,5 +1,7 @@
 = content main
-  {{if .Error}}
+  {{if .Good}}
+    p.good {{.Good}}
+  {{else if .Error}}
     p.error {{.Error}}
   {{else}}
     p Please login.
