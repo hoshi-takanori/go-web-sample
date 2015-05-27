@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -17,30 +16,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Config struct {
-	Address    string
-	PublicDir  string
-	PrivateDir string
-
-	Title string
-
-	DatabaseDriver string
-	DatabaseSource string
-
-	SessionCookie http.Cookie
-
-	AceOptions ace.Options
-}
-
-var config Config
 var db *sql.DB
 
 func main() {
-	str, err := ioutil.ReadFile("config.json")
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(str, &config)
+	err := LoadConfig("config.json")
 	if err != nil {
 		panic(err)
 	}
