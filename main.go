@@ -12,13 +12,15 @@ import (
 	"github.com/yosssi/ace"
 )
 
+var store SessionStore
+
 func main() {
 	err := LoadConfig("config.json")
 	if err != nil {
 		panic(err)
 	}
 
-	err = InitStore(config)
+	store, err = InitStore(config)
 	if err != nil {
 		panic(err)
 	}
@@ -75,8 +77,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		keepLogin := r.FormValue("keep-login")
-		if CheckPassword(username, password) {
-			sessionId, err := StartSession(username)
+		if store.CheckPassword(username, password) {
+			sessionId, err := store.StartSession(username)
 			if err == nil {
 				setCookie(w, sessionId, keepLogin)
 				http.Redirect(w, r, "/", 302)
@@ -90,7 +92,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	ClearSession(r)
+	store.ClearSession(r)
 	setCookie(w, "", "")
 	http.Redirect(w, r, "/", 302)
 }
@@ -100,13 +102,13 @@ func password(w http.ResponseWriter, r *http.Request) {
 	data := newData("Change Password")
 
 	if r.Method == "POST" {
-		username, err := GetSession(r)
+		username, err := store.GetSession(r)
 		current := r.FormValue("current")
-		if err == nil && CheckPassword(username, current) {
+		if err == nil && store.CheckPassword(username, current) {
 			new1 := r.FormValue("new1")
 			new2 := r.FormValue("new2")
 			if new1 == new2 && len(new1) >= 6 && new1 != username {
-				err := ChangePassword(username, new1)
+				err := store.ChangePassword(username, new1)
 				if err == nil {
 					name = "login"
 					data["Good"] = "Your password has been changed successfully. Please login again."
@@ -140,7 +142,7 @@ func setCookie(w http.ResponseWriter, value string, keepLogin string) {
 
 func authHandler(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := GetSession(r)
+		_, err := store.GetSession(r)
 		if err != nil {
 			http.Redirect(w, r, "/login", 302)
 		} else {
@@ -151,7 +153,7 @@ func authHandler(handler http.Handler) http.HandlerFunc {
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	data := newData(config.Title)
-	username, err := GetSession(r)
+	username, err := store.GetSession(r)
 	if err == nil {
 		data["Username"] = username
 	}
