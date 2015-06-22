@@ -1,14 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"net/http"
-	"os"
-	"path"
-	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
 	"github.com/yosssi/ace"
 )
 
@@ -26,7 +21,7 @@ func main() {
 	}
 
 	if config.PublicDir != "" {
-		staticDir(config.PublicDir, http.DefaultServeMux)
+		StaticDir(config.PublicDir, http.DefaultServeMux)
 	}
 
 	http.HandleFunc("/login", login)
@@ -36,7 +31,7 @@ func main() {
 	http.HandleFunc("/", authHandler(mux))
 
 	if config.PrivateDir != "" {
-		staticDir(config.PrivateDir, mux)
+		StaticDir(config.PrivateDir, mux)
 	}
 
 	mux.HandleFunc("/password", password)
@@ -46,27 +41,6 @@ func main() {
 	err = http.ListenAndServe(config.Address, nil)
 	if err != nil {
 		panic(err)
-	}
-}
-
-func staticDir(dirname string, mux *http.ServeMux) {
-	fis, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-
-	fileServer := http.FileServer(http.Dir(dirname))
-	for _, fi := range fis {
-		if fi.Mode()&os.ModeSymlink != 0 {
-			fi2, err := os.Stat(path.Join(dirname, fi.Name()))
-			if err == nil {
-				fi = fi2
-			}
-		}
-		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
-			mux.Handle("/"+fi.Name()+"/", fileServer)
-		}
 	}
 }
 
