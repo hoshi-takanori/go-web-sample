@@ -37,24 +37,30 @@ func main() {
 
 	switch {
 	case len(os.Args) == 3 && os.Args[1] == "set":
-		setPassword(os.Args[2])
+		SetPassword(os.Args[2], nil)
+	case len(os.Args) == 4 && os.Args[1] == "set":
+		SetPassword(os.Args[2], []byte(os.Args[3]))
 	case len(os.Args) == 3 && os.Args[1] == "check":
-		checkPassword(os.Args[2])
+		CheckPassword(os.Args[2], nil)
+	case len(os.Args) == 4 && os.Args[1] == "check":
+		CheckPassword(os.Args[2], []byte(os.Args[3]))
 	default:
-		fmt.Println("usage: password (set|check) username")
+		fmt.Println("usage: password (set|check) username [password]")
 	}
 }
 
-func setPassword(username string) {
-	fmt.Print("Password: ")
-	password := gopass.GetPasswdMasked()
+func SetPassword(username string, password []byte) {
+	if password == nil {
+		fmt.Print("Password: ")
+		password = gopass.GetPasswdMasked()
 
-	fmt.Print("Retype Password: ")
-	retype := gopass.GetPasswdMasked()
+		fmt.Print("Retype Password: ")
+		retype := gopass.GetPasswdMasked()
 
-	if string(password) != string(retype) {
-		fmt.Println("Passwords not match")
-		return
+		if string(password) != string(retype) {
+			fmt.Println("Passwords not match")
+			return
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
@@ -78,7 +84,7 @@ func setPassword(username string) {
 	}
 }
 
-func checkPassword(username string) {
+func CheckPassword(username string, password []byte) {
 	var hash string
 	err := db.QueryRow("select password from users where name = $1", username).Scan(&hash)
 	if err == sql.ErrNoRows {
@@ -88,8 +94,10 @@ func checkPassword(username string) {
 		panic(err)
 	}
 
-	fmt.Print("Password: ")
-	password := gopass.GetPasswdMasked()
+	if password == nil {
+		fmt.Print("Password: ")
+		password = gopass.GetPasswdMasked()
+	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hash), password)
 	if err == nil {
