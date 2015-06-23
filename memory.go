@@ -1,4 +1,4 @@
-// +build !postgres
+// +build memory
 
 package main
 

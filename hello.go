@@ -78,13 +78,13 @@ func MakeSections(targetYear int) ([]Section, error) {
 				name += " " + strconv.Itoa(year)
 			}
 		}
-		sections = append(sections, ListFiles(name, "", usersMap[year]))
+		sections = append(sections, ListFiles(name, usersMap[year]))
 	}
 
 	return sections, nil
 }
 
-func ListFiles(name, diary string, users []User) Section {
+func ListFiles(name string, users []User) Section {
 	entries := []Entry{}
 	now := time.Now()
 	year, month, day := now.Date()
@@ -94,7 +94,7 @@ func ListFiles(name, diary string, users []User) Section {
 		if user.year != 0 {
 			dir = strconv.Itoa(user.year)
 		}
-		file := path.Join(dir, user.name, diary)
+		file := path.Join(dir, user.name, "diary.html")
 		fi, err := os.Stat(path.Join(config.PrivateDir, file))
 		date := "-"
 		dcls := "date-none"

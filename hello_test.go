@@ -1,4 +1,4 @@
-// +build user
+// +build hello
 
 package main
 
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestListUsers(t *testing.T) {
+func TestMakeSections(t *testing.T) {
 	println("TestListUsers")
 
 	err := LoadConfig("config.json")
@@ -19,12 +19,16 @@ func TestListUsers(t *testing.T) {
 		panic(err)
 	}
 
-	users, err := pgStore.ListUsers(0)
+	sections, err := MakeSections(0)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, u := range users {
-		println(u.name, u.year, u.yearNo, u.staffYear)
+	for _, s := range sections {
+		println(s.Name)
+		for _, e := range s.Entries {
+			println(e.Name, e.Path, e.Date, e.Dcls)
+		}
+		println()
 	}
 }
