@@ -1,12 +1,31 @@
+= content script
+  link rel=stylesheet href=/css/index.css
+
 = content main
   {{if .Username}}
-    p Hello, {{.Username}}!
-    p
-      a href=/password Change Password
     form method=post action=/logout
+      | User: {{.Username}}
+      | {{" | "}}
+      a href=/password Password
+      | {{" | "}}
       input type=submit value=logout
+    {{range .Sections}}
+      p.caption {{.Name}}
+      table
+        {{range .Entries}}
+          tr
+            {{if .Path}}
+              td.member-name
+                a href={{.Path}} {{.Name}}
+            {{else}}
+              td.member-name {{.Name}}
+            {{end}}
+            td.member-date
+              span class={{.Dcls}} {{.Date}}
+        {{end}}
+    {{end}}
   {{else}}
-    p Hello, World!
+    p Please Login.
     p
       a href=/login Login
   {{end}}

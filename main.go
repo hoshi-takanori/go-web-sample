@@ -43,15 +43,6 @@ func main() {
 	}
 }
 
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	data := NewData(config.Title)
-	username, err := store.GetSession(r)
-	if err == nil {
-		data["Username"] = username
-	}
-	ExecTemplate(w, "hello", data)
-}
-
 func NewData(title string) map[string]interface{} {
 	return map[string]interface{}{
 		"Title": title,

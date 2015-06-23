@@ -1,0 +1,43 @@
+td {
+  vertical-align: baseline;
+}
+
+td.member-name:before {
+  content: "・";
+}
+
+td.member-name {
+  width: 9em;
+}
+
+td.member-date {
+  font-size: small;
+}
+
+span.date-today {
+  color: #ff0000;
+}
+
+span.date-yesterday {
+  color: #ff9900;
+}
+
+span.date-recent {
+  color: #228800;
+}
+
+span.date-week {
+  color: #3355aa;
+}
+
+span.date-month {
+  color: #996633;
+}
+
+span.date-old {
+  color: #808080;
+}
+
+span.date-none {
+  color: #808080;
+}
