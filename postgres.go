@@ -13,13 +13,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var pgStore PostgresStore
+
 type PostgresStore struct {
 	db *sql.DB
 }
 
 func InitStore(config Config) (SessionStore, error) {
-	db, err := sql.Open(config.DatabaseDriver, config.DatabaseSource)
-	return PostgresStore{db}, err
+	var err error
+	pgStore.db, err = sql.Open(config.DatabaseDriver, config.DatabaseSource)
+	return pgStore, err
 }
 
 func (s PostgresStore) CheckPassword(username, password string) bool {
@@ -28,7 +31,8 @@ func (s PostgresStore) CheckPassword(username, password string) bool {
 	}
 
 	var hash string
-	err := s.db.QueryRow("select password from users where name = $1", username).Scan(&hash)
+	query := "select password from users where name = $1"
+	err := s.db.QueryRow(query, username).Scan(&hash)
 	if err != nil {
 		return false
 	}
@@ -43,7 +47,8 @@ func (s PostgresStore) ChangePassword(username, password string) error {
 		return err
 	}
 
-	_, err = s.db.Exec("update users set password = $1 where name = $2", string(hash), username)
+	query := "update users set password = $1 where name = $2"
+	_, err = s.db.Exec(query, string(hash), username)
 	if err != nil {
 		return err
 	}
@@ -85,7 +90,8 @@ func (s PostgresStore) GetSession(r *http.Request) (string, error) {
 	}
 
 	var username string
-	err = s.db.QueryRow("select user_name from session where id = $1", cookie.Value).Scan(&username)
+	query := "select user_name from session where id = $1"
+	err = s.db.QueryRow(query, cookie.Value).Scan(&username)
 	if err != nil {
 		return "", err
 	}

@@ -5,6 +5,9 @@
 
 	"title": "Go Web Sample",
 
+	"freshYear": 2015,
+	"freshUntil": "2015-07-04",
+
 	"databaseDriver": "postgres",
 	"databaseSource": "postgres://nobody@localhost/web-users",
 

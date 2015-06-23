@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/yosssi/ace"
 )
@@ -14,6 +15,9 @@ type Config struct {
 	PrivateDir string
 
 	Title string
+
+	FreshYear  int
+	FreshUntil string
 
 	DatabaseDriver string
 	DatabaseSource string
@@ -31,5 +35,13 @@ func LoadConfig(filename string) error {
 		return err
 	}
 
-	return json.Unmarshal(str, &config)
+	err = json.Unmarshal(str, &config)
+	if err == nil {
+		t, err := time.Parse("2006-01-02", config.FreshUntil)
+		if err != nil || time.Now().After(t) {
+			config.FreshYear = 0
+		}
+	}
+
+	return err
 }

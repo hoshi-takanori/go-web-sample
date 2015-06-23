@@ -1,6 +1,10 @@
 create table users (
 	name text primary key,
-	password text
+	password text,
+	year int,
+	year_no int,
+	staff_year int,
+	unique (year, year_no)
 );
 
 create table session (
