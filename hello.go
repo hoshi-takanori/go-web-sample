@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -20,54 +21,65 @@ type Entry struct {
 	Dcls string
 }
 
+type UserEntry struct {
+	user  User
+	entry Entry
+}
+
 func HelloHandler(w http.ResponseWriter, r *http.Request) {
 	data := NewData(config.Title)
 
 	username, err := store.GetSession(r)
-
-	var user *User
-	if err == nil {
-		user, err = pgStore.GetUser(username)
-	}
-
-	var sections []Section
-	if err == nil {
-		year := 0
-		if user.year == config.FreshYear {
-			year = user.year
-		}
-		sections, err = MakeSections(year)
-	}
-
 	if err == nil {
 		data["Username"] = username
-		data["Sections"] = sections
+
+		sections, err := MakeSections(username)
+		if err == nil {
+			data["Sections"] = sections
+		}
 	}
 
 	ExecTemplate(w, "hello", data)
 }
 
-func MakeSections(targetYear int) ([]Section, error) {
-	users, err := pgStore.ListUsers(targetYear)
+func MakeSections(username string) ([]Section, error) {
+	user, err := pgStore.GetUser(username)
 	if err != nil {
 		return nil, err
 	}
 
-	usersMap := map[int][]User{}
+	year := 0
+	if user.year == config.FreshYear {
+		year = user.year
+	}
+	users, err := pgStore.ListUsers(year)
+	if err != nil {
+		return nil, err
+	}
+
+	list := ListFiles(users)
+	return MakeYearlySections(list, year)
+}
+
+func MakeYearlySections(list []UserEntry, targetYear int) ([]Section, error) {
 	years := []int{}
-	for _, user := range users {
-		year := user.year
+	entries := map[int][]Entry{}
+	for _, ue := range list {
+		year := ue.user.year
 		if targetYear != 0 && year != targetYear {
 			year = 0
 		}
-		list, ok := usersMap[year]
+
+		list, ok := entries[year]
 		if ok {
-			usersMap[year] = append(list, user)
+			entries[year] = append(list, ue.entry)
 		} else {
-			usersMap[year] = []User{user}
+			entries[year] = []Entry{ue.entry}
 			years = append(years, year)
 		}
 	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(years)))
 
 	sections := []Section{}
 	for _, year := range years {
@@ -78,23 +90,25 @@ func MakeSections(targetYear int) ([]Section, error) {
 				name += " " + strconv.Itoa(year)
 			}
 		}
-		sections = append(sections, ListFiles(name, usersMap[year]))
+		sections = append(sections, Section{name, entries[year]})
 	}
 
 	return sections, nil
 }
 
-func ListFiles(name string, users []User) Section {
-	entries := []Entry{}
+func ListFiles(users []User) []UserEntry {
 	now := time.Now()
 	year, month, day := now.Date()
 	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+
+	list := []UserEntry{}
 	for _, user := range users {
 		dir := "staff"
-		if user.year != 0 {
+		if user.staffYear == 0 && user.year != 0 {
 			dir = strconv.Itoa(user.year)
 		}
 		file := path.Join(dir, user.name, "diary.html")
+
 		fi, err := os.Stat(path.Join(config.PrivateDir, file))
 		date := "-"
 		dcls := "date-none"
@@ -104,9 +118,10 @@ func ListFiles(name string, users []User) Section {
 		} else {
 			file = ""
 		}
-		entries = append(entries, Entry{user.name, file, date, dcls})
+
+		list = append(list, UserEntry{user, Entry{user.name, file, date, dcls}})
 	}
-	return Section{name, entries}
+	return list
 }
 
 func DateClass(date, today time.Time) string {

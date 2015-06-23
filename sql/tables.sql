@@ -4,6 +4,7 @@ create table users (
 	year int,
 	year_no int,
 	staff_year int,
+	staff_no int unique,
 	unique (year, year_no)
 );
 

@@ -29,11 +29,13 @@ func (s PostgresStore) GetUser(name string) (*User, error) {
 func (s PostgresStore) ListUsers(year int) ([]User, error) {
 	query := "select name, year, year_no, staff_year from users"
 	params := []interface{}{}
-	if year != 0 {
+	if year == 0 {
+		query += " order by year_no, staff_no, name"
+	} else {
 		query += " where year = $1 or staff_year = $1"
+		query += " order by staff_no, year_no, name"
 		params = append(params, year)
 	}
-	query += " order by year_no, name"
 	rows, err := s.db.Query(query, params...)
 	if err != nil {
 		return nil, err
