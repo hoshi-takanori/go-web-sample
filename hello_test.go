@@ -9,17 +9,7 @@ import (
 func TestMakeSections(t *testing.T) {
 	println("TestListUsers")
 
-	err := LoadConfig("config.json")
-	if err != nil {
-		panic(err)
-	}
-
-	store, err = InitStore(config)
-	if err != nil {
-		panic(err)
-	}
-
-	sections, err := MakeSections(0)
+	sections, err := MakeSections("nobody")
 	if err != nil {
 		panic(err)
 	}
