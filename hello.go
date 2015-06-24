@@ -11,7 +11,7 @@ func HelloHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		data["Username"] = username
 
-		sections, err := MakeSections(username)
+		sections, err := MakeSections(username, true)
 		if err == nil {
 			data["Sections"] = sections
 		}
@@ -20,7 +20,7 @@ func HelloHandler(w http.ResponseWriter, r *http.Request) {
 	ExecTemplate(w, "hello", data)
 }
 
-func MakeSections(username string) ([]Section, error) {
+func MakeSections(username string, yearly bool) ([]Section, error) {
 	user, err := pgStore.GetUser(username)
 	if err != nil {
 		return nil, err
@@ -30,11 +30,15 @@ func MakeSections(username string) ([]Section, error) {
 	if user.year == config.FreshYear {
 		year = user.year
 	}
-	users, err := pgStore.ListUsers(year)
+	users, err := pgStore.ListUsers(year, yearly)
 	if err != nil {
 		return nil, err
 	}
 
 	list := ListFiles(users)
-	return MakeYearlySections(list, year)
+	if yearly {
+		return MakeYearlySections(list, year), nil
+	} else {
+		return MakeDailySections(list), nil
+	}
 }

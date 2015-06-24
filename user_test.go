@@ -9,7 +9,7 @@ import (
 func TestListUsers(t *testing.T) {
 	println("TestListUsers")
 
-	users, err := pgStore.ListUsers(0)
+	users, err := pgStore.ListUsers(0, true)
 	if err != nil {
 		panic(err)
 	}

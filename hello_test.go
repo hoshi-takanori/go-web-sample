@@ -7,9 +7,9 @@ import (
 )
 
 func TestMakeSections(t *testing.T) {
-	println("TestListUsers")
+	println("TestMakeSections")
 
-	sections, err := MakeSections("nobody")
+	sections, err := MakeSections("nobody", true)
 	if err != nil {
 		panic(err)
 	}

@@ -26,16 +26,24 @@ func (s PostgresStore) GetUser(name string) (*User, error) {
 	return NewUser(name, year, yearNo, staffYear), nil
 }
 
-func (s PostgresStore) ListUsers(year int) ([]User, error) {
+func (s PostgresStore) ListUsers(year int, order bool) ([]User, error) {
 	query := "select name, year, year_no, staff_year from users"
 	params := []interface{}{}
-	if year == 0 {
-		query += " order by year_no, staff_no, name"
-	} else {
+	if year != 0 {
 		query += " where year = $1 or staff_year = $1"
-		query += " order by staff_no, year_no, name"
 		params = append(params, year)
 	}
+
+	if order {
+		if year == 0 {
+			query += " order by year_no, staff_no, name"
+		} else {
+			query += " order by staff_no, year_no, name"
+		}
+	} else {
+		query += " order by name"
+	}
+
 	rows, err := s.db.Query(query, params...)
 	if err != nil {
 		return nil, err

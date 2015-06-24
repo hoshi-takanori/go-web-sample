@@ -36,7 +36,7 @@ func NewYearlyEntry(ue UserEntry, today time.Time) Entry {
 	return Entry{ue.user.name, ue.path, date, dcls}
 }
 
-func MakeYearlySections(list []UserEntry, targetYear int) ([]Section, error) {
+func MakeYearlySections(list []UserEntry, targetYear int) []Section {
 	now := time.Now()
 	year, month, day := now.Date()
 	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
@@ -50,12 +50,11 @@ func MakeYearlySections(list []UserEntry, targetYear int) ([]Section, error) {
 		}
 
 		list, ok := entries[year]
-		if ok {
-			entries[year] = append(list, NewYearlyEntry(ue, today))
-		} else {
-			entries[year] = []Entry{NewYearlyEntry(ue, today)}
+		if !ok {
+			list = []Entry{}
 			years = append(years, year)
 		}
+		entries[year] = append(list, NewYearlyEntry(ue, today))
 	}
 
 	sort.Sort(sort.Reverse(sort.IntSlice(years)))
@@ -72,7 +71,48 @@ func MakeYearlySections(list []UserEntry, targetYear int) ([]Section, error) {
 		sections = append(sections, Section{name, entries[year]})
 	}
 
-	return sections, nil
+	return sections
+}
+
+type ByDate []UserEntry
+
+func (a ByDate) Len() int           { return len(a) }
+func (a ByDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByDate) Less(i, j int) bool { return a[i].mtime.After(a[j].mtime) }
+
+func NewDailyEntry(ue UserEntry) Entry {
+	date := "-"
+	if !ue.mtime.IsZero() {
+		date = ue.mtime.Format("15:04:05")
+	}
+	return Entry{ue.user.name, ue.path, date, "date-none"}
+}
+
+func MakeDailySections(list []UserEntry) []Section {
+	sort.Stable(ByDate(list))
+
+	dates := []string{}
+	entries := map[string][]Entry{}
+	for _, ue := range list {
+		date := "No Diary"
+		if !ue.mtime.IsZero() {
+			date = ue.mtime.Format("2006/01/02")
+		}
+
+		list, ok := entries[date]
+		if !ok {
+			list = []Entry{}
+			dates = append(dates, date)
+		}
+		entries[date] = append(list, NewDailyEntry(ue))
+	}
+
+	sections := []Section{}
+	for _, date := range dates {
+		sections = append(sections, Section{date, entries[date]})
+	}
+
+	return sections
 }
 
 func ListFiles(users []User) []UserEntry {
