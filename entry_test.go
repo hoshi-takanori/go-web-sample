@@ -1,4 +1,4 @@
-// +build hello
+// +build entry
 
 package main
 
@@ -9,9 +9,20 @@ import (
 func TestMakeSections(t *testing.T) {
 	println("TestMakeSections")
 
-	sections, err := MakeSections("nobody", true)
+	year := 0
+	order := true
+
+	users, err := pgStore.ListUsers(year, order)
 	if err != nil {
 		panic(err)
+	}
+
+	list := ListFiles(users)
+	var sections []Section
+	if order {
+		sections = MakeSections(list, year)
+	} else {
+		sections = MakeDailySections(list)
 	}
 
 	for _, s := range sections {

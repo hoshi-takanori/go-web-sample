@@ -26,7 +26,7 @@ type UserEntry struct {
 	mtime time.Time
 }
 
-func NewYearlyEntry(ue UserEntry, today time.Time) Entry {
+func NewEntry(ue UserEntry, today time.Time) Entry {
 	date := "-"
 	dcls := "date-none"
 	if !ue.mtime.IsZero() {
@@ -36,7 +36,7 @@ func NewYearlyEntry(ue UserEntry, today time.Time) Entry {
 	return Entry{ue.user.name, ue.path, date, dcls}
 }
 
-func MakeYearlySections(list []UserEntry, targetYear int) []Section {
+func MakeSections(list []UserEntry, targetYear int) []Section {
 	now := time.Now()
 	year, month, day := now.Date()
 	today := time.Date(year, month, day, 0, 0, 0, 0, now.Location())
@@ -54,7 +54,7 @@ func MakeYearlySections(list []UserEntry, targetYear int) []Section {
 			list = []Entry{}
 			years = append(years, year)
 		}
-		entries[year] = append(list, NewYearlyEntry(ue, today))
+		entries[year] = append(list, NewEntry(ue, today))
 	}
 
 	sort.Sort(sort.Reverse(sort.IntSlice(years)))

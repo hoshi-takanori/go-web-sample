@@ -35,7 +35,12 @@ func main() {
 
 	mux.HandleFunc("/password", PasswordHandler)
 
-	mux.HandleFunc("/", HelloHandler)
+	router := NewRouter()
+
+	router.Handle("GET", "/", IndexHandler)
+	router.Handle("GET", "/daily", DailyHandler)
+
+	mux.Handle("/", router)
 
 	err = http.ListenAndServe(config.Address, nil)
 	if err != nil {

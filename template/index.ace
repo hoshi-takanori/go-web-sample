@@ -9,6 +9,19 @@
       a href=/password Password
       | {{" | "}}
       input type=submit value=logout
+    p
+      | {{"Mode: "}}
+      {{if .Order}}
+        | Normal
+      {{else}}
+        a href=/ Normal
+      {{end}}
+      | {{" | "}}
+      {{if .Order}}
+        a href=/daily Daily
+      {{else}}
+        | Daily
+      {{end}}
     {{range .Sections}}
       p.caption {{.Name}}
       table
