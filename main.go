@@ -40,6 +40,15 @@ func main() {
 	router.Handle("GET", "/", IndexHandler)
 	router.Handle("GET", "/daily", DailyHandler)
 
+	router.Handle("GET", "/files", FilesHandler)
+	router.Handle("POST", "/file-upload", FileUploadHandler)
+	router.Handle("POST", "/file-delete", FileDeleteHandler)
+	router.Handle("POST", "/file-copy", FileCopyHandler)
+
+	router.HandleWithName("GET", "/edit/", FileEditHandler)
+	router.HandleWithName("GET", "/edit-get/", FileGetHandler)
+	router.HandleWithName("PUT", "/edit-put/", FilePutHandler)
+
 	mux.Handle("/", router)
 
 	err = http.ListenAndServe(config.Address, nil)

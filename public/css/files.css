@@ -1,0 +1,34 @@
+td {
+  vertical-align: baseline;
+}
+
+td.file-name:before {
+  content: "・";
+}
+
+td.file-edit {
+  text-align: center;
+}
+
+td.file-edit span.no-edit {
+  color: gray;
+}
+
+td.file-delete {
+  text-align: center;
+}
+
+td.file-delete span.deleted {
+  color: gray;
+  font-size: small;
+}
+
+td.file-size {
+  font-size: small;
+  text-align: right;
+}
+
+td.file-date {
+  color: gray;
+  font-size: x-small;
+}

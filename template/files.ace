@@ -1,0 +1,49 @@
+= content script
+  link rel=stylesheet href=/css/files.css
+  script type=text/javascript src=/js/files.js
+
+= content main
+  form method=post action=/logout
+    | User: {{.Username}}
+    | {{" | "}}
+    | Files
+    | {{" | "}}
+    a href=/password Password
+    | {{" | "}}
+    input type=submit value=logout
+  p.caption Your files
+  table
+    {{$dir := .Dir}}
+    {{range .Files}}
+      tr
+        td.file-name
+          a href="{{$dir}}/{{.Name}}" {{.Name}}
+        td.file-edit
+          {{if .Edit}}
+            button onclick="location.href = '/edit/{{.Name}}'" Edit
+          {{else}}
+            span.no-edit -
+          {{end}}
+        td.file-copy
+          button data-name=file.name onclick="copyFile(this);" Copy
+        td.file-delete
+          {{if .Size}}
+            form method=post action=/file-delete onsubmit="return window.confirm('Really delete {{.Name}}?');"
+              input type=hidden name=name value={{.Name}}
+              input type=submit value=Delete
+          {{else}}
+            span.deleted Delete
+          {{end}}
+        td.file-size {{.Size}}
+        td.file-date {{.Date}}
+    {{end}}
+  form method=post action=/file-copy id=copy-form
+    input type=hidden name=source id=copy-form-source
+    input type=hidden name=dest id=copy-form-dest
+  button onclick="createFile();" Create New File
+  p.caption Upload file
+  form method=post action=/file-upload enctype=multipart/form-data
+    input type=file name=file
+    input type=submit value=Upload
+  p
+    a href=/ Top page

@@ -2,43 +2,39 @@
   link rel=stylesheet href=/css/index.css
 
 = content main
-  {{if .Username}}
-    form method=post action=/logout
-      | User: {{.Username}}
-      | {{" | "}}
-      a href=/password Password
-      | {{" | "}}
-      input type=submit value=logout
-    p
-      | {{"Mode: "}}
-      {{if .Order}}
-        | Normal
-      {{else}}
-        a href=/ Normal
-      {{end}}
-      | {{" | "}}
-      {{if .Order}}
-        a href=/daily Daily
-      {{else}}
-        | Daily
-      {{end}}
-    {{range .Sections}}
-      p.caption {{.Name}}
-      table
-        {{range .Entries}}
-          tr
-            {{if .Path}}
-              td.member-name
-                a href={{.Path}} {{.Name}}
-            {{else}}
-              td.member-name {{.Name}}
-            {{end}}
-            td.member-date
-              span class={{.Dcls}} {{.Date}}
-        {{end}}
+  form method=post action=/logout
+    | User: {{.Username}}
+    | {{" | "}}
+    a href=/files Files
+    | {{" | "}}
+    a href=/password Password
+    | {{" | "}}
+    input type=submit value=logout
+  p
+    | {{"Mode: "}}
+    {{if .Order}}
+      | Normal
+    {{else}}
+      a href=/ Normal
     {{end}}
-  {{else}}
-    p Please Login.
-    p
-      a href=/login Login
+    | {{" | "}}
+    {{if .Order}}
+      a href=/daily Daily
+    {{else}}
+      | Daily
+    {{end}}
+  {{range .Sections}}
+    p.caption {{.Name}}
+    table
+      {{range .Entries}}
+        tr
+          {{if .Path}}
+            td.member-name
+              a href={{.Path}} {{.Name}}
+          {{else}}
+            td.member-name {{.Name}}
+          {{end}}
+          td.member-date
+            span class={{.Dcls}} {{.Date}}
+      {{end}}
   {{end}}

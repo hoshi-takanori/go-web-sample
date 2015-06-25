@@ -26,7 +26,7 @@ func (r *Router) Handle(method, path string,
 	r.entries = append(r.entries, RouterEntry{method, path, handler, nil})
 }
 
-func (r *Router) HandleWithExtra(method, path string,
+func (r *Router) HandleWithName(method, path string,
 	handler2 func(http.ResponseWriter, *http.Request, User, string)) {
 	r.entries = append(r.entries, RouterEntry{method, path, nil, handler2})
 }

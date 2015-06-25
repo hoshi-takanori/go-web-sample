@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"path"
+	"strconv"
 )
 
 type User struct {
@@ -13,6 +15,14 @@ type User struct {
 
 func NewUser(name string, year, yearNo, staffYear sql.NullInt64) *User {
 	return &User{name, int(year.Int64), int(yearNo.Int64), int(staffYear.Int64)}
+}
+
+func (user User) Dir(base, file string) string {
+	dir := "staff"
+	if user.staffYear == 0 && user.year != 0 {
+		dir = strconv.Itoa(user.year)
+	}
+	return path.Join(base, dir, user.name, file)
 }
 
 func (s PostgresStore) GetUser(name string) (*User, error) {
