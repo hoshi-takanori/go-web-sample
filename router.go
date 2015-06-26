@@ -34,7 +34,7 @@ func (r *Router) HandleWithName(method, path string,
 func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	username, err := store.GetSession(r)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
