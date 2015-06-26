@@ -17,7 +17,7 @@ func NewUser(name string, year, yearNo, staffYear sql.NullInt64) *User {
 	return &User{name, int(year.Int64), int(yearNo.Int64), int(staffYear.Int64)}
 }
 
-func (user User) Dir(base, file string) string {
+func (user User) Path(base, file string) string {
 	dir := "staff"
 	if user.staffYear == 0 && user.year != 0 {
 		dir = strconv.Itoa(user.year)

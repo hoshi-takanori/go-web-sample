@@ -120,7 +120,7 @@ func ListFiles(users []User) []UserEntry {
 	for _, user := range users {
 		ue := UserEntry{user: user}
 
-		file := user.Dir("", "diary.html")
+		file := user.Path("", "diary.html")
 		fi, err := os.Stat(path.Join(config.PrivateDir, file))
 		if err == nil && fi.Mode().IsRegular() {
 			ue.path = file

@@ -38,7 +38,7 @@ func Editable(name string) bool {
 }
 
 func FilesHandler(w http.ResponseWriter, r *http.Request, user User) {
-	dir := user.Dir(config.PrivateDir, "")
+	dir := user.Path(config.PrivateDir, "")
 
 	fis, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -57,7 +57,7 @@ func FilesHandler(w http.ResponseWriter, r *http.Request, user User) {
 
 	data := NewData("File Manager")
 	data["Username"] = user.name
-	data["Dir"] = user.Dir("", "")
+	data["Dir"] = user.Path("", "")
 	data["Files"] = files
 	ExecTemplate(w, "files", data)
 }
@@ -88,8 +88,8 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, user User) {
 		return
 	}
 
-	name := user.Dir(config.PrivateDir, header.Filename)
-	dst, err := os.OpenFile(name, os.O_WRONLY | os.O_CREATE, 0644)
+	name := user.Path(config.PrivateDir, header.Filename)
+	dst, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -102,13 +102,74 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, user User) {
 		return
 	}
 
-	http.Redirect(w, r, "/files", 302)
+	http.Redirect(w, r, "/files", http.StatusFound)
 }
 
 func FileDeleteHandler(w http.ResponseWriter, r *http.Request, user User) {
+	name := r.FormValue("name")
+	if name == "" || strings.Contains(name, "/") {
+		http.Error(w, "Bad Filename", http.StatusBadRequest)
+		return
+	}
+
+	err := os.Truncate(user.Path(config.PrivateDir, name), 0)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/files", http.StatusFound)
 }
 
 func FileCopyHandler(w http.ResponseWriter, r *http.Request, user User) {
+	src := r.FormValue("source")
+	if src == "" || strings.Contains(src, "/") {
+		http.Error(w, "Bad Filename", http.StatusBadRequest)
+		return
+	}
+
+	srcPath := user.Path(config.PrivateDir, src)
+	srcStat, err := os.Stat(srcPath)
+	if err != nil || !srcStat.Mode().IsRegular() {
+		http.Error(w, "Source Not Exists", http.StatusBadRequest)
+		return
+	}
+
+	dst := r.FormValue("dest")
+	if !GoodName(dst) {
+		http.Error(w, "Bad Filename", http.StatusBadRequest)
+		return
+	}
+
+	dstPath := user.Path(config.PrivateDir, dst)
+	dstStat, err := os.Stat(dstPath)
+	if !os.IsNotExist(err) &&
+		(err != nil || !dstStat.Mode().IsRegular() || dstStat.Size() > 0) {
+		http.Error(w, "Destination Exists", http.StatusBadRequest)
+		return
+	}
+
+	reader, err := os.Open(srcPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer reader.Close()
+
+	writer, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer writer.Close()
+
+	_, err = io.Copy(writer, reader)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/files", http.StatusFound)
 }
 
 func FileEditHandler(w http.ResponseWriter, r *http.Request, user User, name string) {

@@ -18,7 +18,7 @@ func AuthHandler(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, err := store.GetSession(r)
 		if err != nil {
-			http.Redirect(w, r, "/login", 302)
+			http.Redirect(w, r, "/login", http.StatusFound)
 		} else {
 			handler.ServeHTTP(w, r)
 		}
@@ -36,7 +36,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			sessionId, err := store.StartSession(username)
 			if err == nil {
 				SetCookie(w, sessionId, keepLogin)
-				http.Redirect(w, r, "/", 302)
+				http.Redirect(w, r, "/", http.StatusFound)
 			}
 		}
 
@@ -49,7 +49,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	store.ClearSession(r)
 	SetCookie(w, "", "")
-	http.Redirect(w, r, "/", 302)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func PasswordHandler(w http.ResponseWriter, r *http.Request) {

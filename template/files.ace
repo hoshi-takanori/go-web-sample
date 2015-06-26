@@ -25,7 +25,7 @@
             span.no-edit -
           {{end}}
         td.file-copy
-          button data-name=file.name onclick="copyFile(this);" Copy
+          button data-name="{{.Name}}" onclick="copyFile(this);" Copy
         td.file-delete
           {{if .Size}}
             form method=post action=/file-delete onsubmit="return window.confirm('Really delete {{.Name}}?');"
