@@ -1,0 +1,13 @@
+= content style
+  link rel=stylesheet href=/css/edit.css
+
+= content script
+  script type=text/javascript src=/ace/ace.js
+  script type=text/javascript src=/js/edit.js
+
+= content main
+  #editor
+  p
+    button onclick="save();" Save
+  p
+    a href=/ Top page

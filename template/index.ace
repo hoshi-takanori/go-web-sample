@@ -1,4 +1,4 @@
-= content script
+= content style
   link rel=stylesheet href=/css/index.css
 
 = content main

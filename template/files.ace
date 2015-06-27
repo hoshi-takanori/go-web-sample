@@ -1,5 +1,7 @@
-= content script
+= content style
   link rel=stylesheet href=/css/files.css
+
+= content script
   script type=text/javascript src=/js/files.js
 
 = content main

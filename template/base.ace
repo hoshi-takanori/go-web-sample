@@ -5,7 +5,8 @@ html
     title {{.Title}}
     meta name=viewport content="width=device-width, initial-scale=1.0"
     link rel=stylesheet href=/css/style.css
-    = yield script
+    = yield style
   body
     h1 {{.Title}}
     = yield main
+    = yield script
