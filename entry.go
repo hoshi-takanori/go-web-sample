@@ -15,6 +15,7 @@ type Section struct {
 
 type Entry struct {
 	Name string
+	Year string
 	Path string
 	Date string
 	Dcls string
@@ -33,7 +34,7 @@ func NewEntry(ue UserEntry, today time.Time) Entry {
 		date = ue.mtime.Format("2006/01/02 15:04:05")
 		dcls = DateClass(ue.mtime, today)
 	}
-	return Entry{ue.user.name, ue.path, date, dcls}
+	return Entry{ue.user.name, "", ue.path, date, dcls}
 }
 
 func MakeSections(list []UserEntry, targetYear int) []Section {
@@ -81,11 +82,15 @@ func (a ByDate) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByDate) Less(i, j int) bool { return a[i].mtime.After(a[j].mtime) }
 
 func NewDailyEntry(ue UserEntry) Entry {
+	year := "staff"
+	if ue.user.year != 0 && ue.user.staffYear == 0 {
+		year = strconv.Itoa(ue.user.year)
+	}
 	date := "-"
 	if !ue.mtime.IsZero() {
 		date = ue.mtime.Format("15:04:05")
 	}
-	return Entry{ue.user.name, ue.path, date, "date-none"}
+	return Entry{ue.user.name, year, ue.path, date, "date-none"}
 }
 
 func MakeDailySections(list []UserEntry) []Section {

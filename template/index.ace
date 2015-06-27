@@ -23,16 +23,28 @@
     {{else}}
       | Daily
     {{end}}
+  {{$order := .Order}}
   {{range .Sections}}
     p.caption {{.Name}}
     table
       {{range .Entries}}
         tr
-          {{if .Path}}
+          {{if $order}}
             td.member-name
-              a href={{.Path}} {{.Name}}
+              {{if .Path}}
+                a href={{.Path}} {{.Name}}
+              {{else}}
+                | {{.Name}}
+              {{end}}
           {{else}}
-            td.member-name {{.Name}}
+            td.member-daily
+              {{if .Path}}
+                a href={{.Path}} {{.Name}}
+              {{else}}
+                | {{.Name}}
+              {{end}}
+              | {{" "}}
+              span.member-year ({{.Year}})
           {{end}}
           td.member-date
             span class={{.Dcls}} {{.Date}}

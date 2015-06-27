@@ -2,7 +2,8 @@ td {
   vertical-align: baseline;
 }
 
-td.member-name:before {
+td.member-name:before,
+td.member-daily:before {
   content: "・";
 }
 
@@ -10,8 +11,17 @@ td.member-name {
   width: 9em;
 }
 
+td.member-daily {
+  width: 12em;
+}
+
 td.member-date {
   font-size: small;
+}
+
+span.member-year {
+  font-size: small;
+  color: #808080;
 }
 
 span.date-today {

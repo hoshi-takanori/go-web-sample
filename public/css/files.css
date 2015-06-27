@@ -7,7 +7,6 @@ td.file-name:before {
 }
 
 td.file-name {
-  width: 8em;
   padding-right: 1em;
 }
 
@@ -31,11 +30,11 @@ td.file-delete span.deleted {
 td.file-size {
   font-size: small;
   text-align: right;
-  width: 4em;
-  padding-right: 1em;
+  padding-left: 1em;
 }
 
 td.file-date {
   color: gray;
   font-size: x-small;
+  padding-left: 1em;
 }
