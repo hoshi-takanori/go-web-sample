@@ -204,5 +204,22 @@ func FileGetHandler(w http.ResponseWriter, r *http.Request, user User, name stri
 }
 
 func FilePutHandler(w http.ResponseWriter, r *http.Request, user User, name string) {
-	println("put:", name)
+	if !Editable(name) {
+		http.Error(w, "Bad Filename", http.StatusBadRequest)
+		return
+	}
+
+	dstPath := user.Path(config.PrivateDir, name)
+	file, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
