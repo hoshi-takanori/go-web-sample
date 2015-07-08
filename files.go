@@ -89,7 +89,7 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, user User) {
 	}
 
 	name := user.Path(config.PrivateDir, header.Filename)
-	dst, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE, 0644)
+	dst, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -156,7 +156,7 @@ func FileCopyHandler(w http.ResponseWriter, r *http.Request, user User) {
 	}
 	defer reader.Close()
 
-	writer, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE, 0644)
+	writer, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -210,7 +210,7 @@ func FilePutHandler(w http.ResponseWriter, r *http.Request, user User, name stri
 	}
 
 	dstPath := user.Path(config.PrivateDir, name)
-	file, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
