@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var editables = [...]string{".html", ".htm", ".css", ".js", ".java", ".go", ".txt"}
+var editables = [...]string{".html", ".htm", ".css", ".js", ".java", ".go", ".md", ".txt"}
 
 type FileEntry struct {
 	Name string
